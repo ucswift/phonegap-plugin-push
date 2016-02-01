@@ -147,10 +147,11 @@
 
     isInline = NO;
 
+    NSMutableSet *categories = [[NSMutableSet alloc] init];
     if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 8.0) {
         NSLog(@"PushPlugin.register: better button setup");
         // setup action buttons
-        NSMutableSet *categories = [[NSMutableSet alloc] init];
+        
         id categoryOptions = [iosOptions objectForKey:@"categories"];
         if (categoryOptions != nil && [categoryOptions isKindOfClass:[NSDictionary class]]) {
             for (id key in categoryOptions) {
