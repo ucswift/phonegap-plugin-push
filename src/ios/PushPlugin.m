@@ -147,6 +147,7 @@
 
     isInline = NO;
 
+    if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 8.0) {
         NSLog(@"PushPlugin.register: better button setup");
         // setup action buttons
         NSMutableSet *categories = [[NSMutableSet alloc] init];
@@ -203,6 +204,7 @@
             }
 
         }
+    }
 
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
