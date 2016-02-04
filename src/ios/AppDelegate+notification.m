@@ -203,7 +203,7 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
 
   if (application.applicationState == UIApplicationStateActive) {
     PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];
-    pushHandler.notificationMessage = mutableNotification;
+    pushHandler.notificationMessage = userInfo;
     pushHandler.isInline = YES;
     [pushHandler notificationReceived];
   } else {
@@ -215,7 +215,7 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithCapacity:2];
     [params setObject:safeHandler forKey:@"remoteNotificationHandler"];
     PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];    
-    pushHandler.notificationMessage = mutableNotification;    
+    pushHandler.notificationMessage = userInfo;    
     pushHandler.params= params;  
     [pushHandler notificationReceived];
   }
