@@ -213,10 +213,10 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
         });
     };
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithCapacity:2];
-    [params setObject:safeHandler forKey:@"remoteNotificationHandler"];
+    [params setObject:safeHandler forKey:@"handler"];
     PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];    
     pushHandler.notificationMessage = userInfo;    
-    pushHandler.params= params;  
+    pushHandler.handlerObj = params;
     [pushHandler notificationReceived];
   }
 }
