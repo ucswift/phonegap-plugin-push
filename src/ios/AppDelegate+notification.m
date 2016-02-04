@@ -44,6 +44,8 @@ static char launchNotificationKey;
 // to process notifications in cold-start situations
 - (void)createNotificationChecker:(NSNotification *)notification
 {
+    NSLog(@"createNotificationChecker");
+
     if (notification)
     {
         NSDictionary *launchOptions = [notification userInfo];
@@ -60,6 +62,23 @@ static char launchNotificationKey;
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
     PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
     [pushHandler didFailToRegisterForRemoteNotificationsWithError:error];
+}
+
+// this method is invoked when:
+// - a regular notification is tapped
+// - an interactive notification is tapped, but not one of its buttons
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
+  NSLog(@"didReceiveNotification");
+  
+  if (application.applicationState == UIApplicationStateActive) {
+    PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];
+    pushHandler.notificationMessage = userInfo;
+    pushHandler.isInline = YES;
+    [pushHandler notificationReceived];
+  } else {
+    //save it for later
+    self.launchNotification = userInfo;
+  }
 }
 
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
@@ -129,7 +148,7 @@ static char launchNotificationKey;
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
 
-    NSLog(@"active");
+    NSLog(@"applicationDidBecomeActive");
 
     PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
     if (pushHandler.clearBadge) {
@@ -148,13 +167,15 @@ static char launchNotificationKey;
     }
 }
 
-
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
 - (void)application:(UIApplication *) application handleActionWithIdentifier: (NSString *) identifier
 forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^)()) completionHandler {
 
     NSLog(@"Push Plugin handleActionWithIdentifier %@", identifier);
     NSMutableDictionary *userInfo = [notification mutableCopy];
+
     [userInfo setObject:identifier forKey:@"callback"];
+
     PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
     pushHandler.notificationMessage = userInfo;
     pushHandler.isInline = NO;
@@ -164,6 +185,43 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
     // Must be called when finished
     completionHandler();
 }
+
+// this method is invoked when:
+// - one of the buttons of an interactive notification is tapped
+// see https://developer.apple.com/library/mac/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/IPhoneOSClientImp.html#//apple_ref/doc/uid/TP40008194-CH103-SW1
+- (void)application:(UIApplication *) application handleActionWithIdentifier: (NSString *) identifier forRemoteNotification: (NSDictionary *) notification withResponseInfo:(NSDictionary *)responseInfo completionHandler: (void (^)()) completionHandler {
+
+  NSLog(@"Push Plugin handleActionWithIdentifier %@ and responseInfo", identifier);
+  NSMutableDictionary *userInfo = [notification mutableCopy];
+
+  [userInfo setObject:identifier forKey:@"callback"];
+    
+  if(responseInfo != nil){
+    NSString *textInput = [[NSString alloc]initWithFormat:@"%@",[responseInfo objectForKey:@"UIUserNotificationActionResponseTypedTextKey"]];
+    [userInfo setValue:textInput forKey:@"textInput"];
+  }
+
+  if (application.applicationState == UIApplicationStateActive) {
+    PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];
+    pushHandler.notificationMessage = mutableNotification;
+    pushHandler.isInline = YES;
+    [pushHandler notificationReceived];
+  } else {
+    void (^safeHandler)() = ^(void){
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completionHandler();
+        });
+    };
+    NSMutableDictionary* params = [NSMutableDictionary dictionaryWithCapacity:2];
+    [params setObject:safeHandler forKey:@"remoteNotificationHandler"];
+    PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];    
+    pushHandler.notificationMessage = mutableNotification;    
+    pushHandler.params= params;  
+    [pushHandler notificationReceived];
+  }
+}
+#endif
+  
 
 // The accessors use an Associative Reference since you can't define a iVar in a category
 // http://developer.apple.com/library/ios/#documentation/cocoa/conceptual/objectivec/Chapters/ocAssociativeReferences.html
