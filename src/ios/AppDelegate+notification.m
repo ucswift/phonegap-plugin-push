@@ -169,7 +169,7 @@ static char launchNotificationKey;
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
 - (void)application:(UIApplication *) application handleActionWithIdentifier: (NSString *) identifier
-forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^)(UIBackgroundFetchResult result)) completionHandler {
+forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^)()) completionHandler {
 
     NSLog(@"Push Plugin handleActionWithIdentifier %@", identifier);
     NSMutableDictionary *userInfo = [notification mutableCopy];
@@ -185,19 +185,43 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
     // Must be called when finished
     completionHandler();
   } else {
-    void (^safeHandler)() = ^(UIBackgroundFetchResult result){
+    void (^safeHandler)() = ^(){
         dispatch_async(dispatch_get_main_queue(), ^{
-            completionHandler(result);
+            completionHandler();
         });
     };
 
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithCapacity:2];
     [params setObject:safeHandler forKey:@"handler"];
     PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];    
-    pushHandler.notificationMessage = userInfo;    
+    pushHandler.notificationMessage = userInfo;
+    pushHandler.isInline = NO;
     pushHandler.handlerObj = params;
     [pushHandler notificationReceived];
   }
+}
+
+// Slient notification
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)notification fetchCompletionHandler:(void(^)(UIBackgroundFetchResult result))completionHandler
+{
+    NSLog(@"didReceiveRemoteNotification with fetchCompletionHandler");  
+
+    void (^safeHandler)(UIBackgroundFetchResult) = ^(UIBackgroundFetchResult result){
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completionHandler(result);
+        });
+    };
+
+    NSMutableDictionary *userInfo = [notification mutableCopy];
+
+    NSMutableDictionary* params = [NSMutableDictionary dictionaryWithCapacity:2];
+    [params setObject:safeHandler forKey:@"handler"];
+
+    PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];    
+    pushHandler.notificationMessage = userInfo;
+    pushHandler.isInline = NO;
+    pushHandler.handlerObj= params;  
+    [pushHandler notificationReceived];
 }
 
 // this method is invoked when:
