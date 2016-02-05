@@ -166,28 +166,6 @@ static char launchNotificationKey;
     }
 }
 
-//- (void)applicationDidBecomeActive:(UIApplication *)application {
-//
-//    NSLog(@"applicationDidBecomeActive");
-//
-//    PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
-//    if (pushHandler.clearBadge) {
-//        NSLog(@"PushPlugin clearing badge");
-//        //zero badge
-//        application.applicationIconBadgeNumber = 0;
-//    } else {
-//       NSLog(@"PushPlugin skip clear badge");
-//    }
-//
-//    if (self.launchNotification) {
-//        pushHandler.isInline = NO;
-//        pushHandler.notificationMessage = self.launchNotification;
-//        self.launchNotification = nil;
-//        [pushHandler performSelectorOnMainThread:@selector(notificationReceived) withObject:pushHandler waitUntilDone:NO];
-//    }
-//}
-
-
 - (void)application:(UIApplication *) application handleActionWithIdentifier: (NSString *) identifier
 forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^)()) completionHandler {
 
@@ -217,11 +195,12 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
 // - one of the buttons of an interactive notification is tapped
 // see https://developer.apple.com/library/mac/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/IPhoneOSClientImp.html#//apple_ref/doc/uid/TP40008194-CH103-SW1
 // THIS SEEMS TO BE iOS9 ONLY
+/*
 - (void)application:(UIApplication *) application handleActionWithIdentifier: (NSString *) identifier forRemoteNotification: (NSDictionary *) notification withResponseInfo:(NSDictionary *)responseInfo completionHandler: (void (^)()) completionHandler {
 
   NSLog(@"Push Plugin handleActionWithIdentifier %@ and responseInfo", identifier);
-  NSMutableDictionary *userInfo = [notification mutableCopy];
 
+  NSMutableDictionary *userInfo = [notification mutableCopy];
   [userInfo setObject:identifier forKey:@"callback"];
     
   if(responseInfo != nil){
@@ -242,7 +221,7 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
             completionHandler();
         });
     };
-    
+
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithCapacity:2];
     [params setObject:safeHandler forKey:@"handler"];
     PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];    
@@ -252,6 +231,7 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
     [pushHandler notificationReceived];
   }
 }
+*/
 #endif
   
 
