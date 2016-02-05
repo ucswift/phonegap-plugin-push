@@ -35,10 +35,8 @@ static char launchNotificationKey;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(createNotificationChecker:)
                                                  name:@"UIApplicationDidFinishLaunchingNotification" object:nil];
 
-    [[NSNotificationCenter defaultCenter]addObserver:self
-                                          selector:@selector(onApplicationDidBecomeActive:)
-                                              name:UIApplicationDidBecomeActiveNotification
-                                            object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onApplicationDidBecomeActive:)
+                                              name:@"UIApplicationDidBecomeActiveNotification" object:nil];
 
     // This actually calls the original init method over in AppDelegate. Equivilent to calling super
     // on an overrided method, this is not recursive, although it appears that way. neat huh?
@@ -203,26 +201,30 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
     PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
     pushHandler.notificationMessage = userInfo;
     pushHandler.isInline = NO;
-    [pushHandler notificationReceived];
+    //[pushHandler notificationReceived];
 
-    // Must be called when finished
-    completionHandler();
+    
   //} else {
   //  NSLog(@"app is inactive");
-  //  void (^safeHandler)() = ^(){
-  //      dispatch_async(dispatch_get_main_queue(), ^{
-  //          completionHandler();
-  //      });
-  //  };
+    void (^safeHandler)() = ^(){
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completionHandler();
+        });
+    };
 
-  //  NSMutableDictionary* params = [NSMutableDictionary dictionaryWithCapacity:2];
-  //  [params setObject:safeHandler forKey:@"handler"];
+    NSMutableDictionary* params = [NSMutableDictionary dictionaryWithCapacity:2];
+    [params setObject:safeHandler forKey:@"handler"];
   //  PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];    
   //  pushHandler.notificationMessage = userInfo;
   //  pushHandler.isInline = NO;
-  //  pushHandler.handlerObj = params;
-  //  [pushHandler notificationReceived];
+    pushHandler.handlerObj = params;
+    [pushHandler notificationReceived];
   //}
+
+    // Must be called when finished
+    //if (completionHandler) {
+    //    completionHandler();
+    //}
 }
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000

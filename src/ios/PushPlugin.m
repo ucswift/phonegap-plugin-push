@@ -497,7 +497,7 @@
         float finishTimer = (app.backgroundTimeRemaining > 20.0) ? 20.0 : app.backgroundTimeRemaining;
 
         dispatch_async(dispatch_get_main_queue(), ^{
-            [NSTimer scheduledTimerWithTimeInterval:finishTimer
+            [NSTimer scheduledTimerWithTimeInterval:0.1
                                        target:self
                                        selector:@selector(stopBackgroundTask:)
                                        userInfo:nil
