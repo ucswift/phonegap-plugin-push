@@ -177,6 +177,7 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
     [userInfo setObject:identifier forKey:@"callback"];
 
   if (application.applicationState == UIApplicationStateActive) {
+    NSLog(@"app is active");
     PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
     pushHandler.notificationMessage = userInfo;
     pushHandler.isInline = NO;
@@ -185,6 +186,7 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
     // Must be called when finished
     completionHandler();
   } else {
+    NSLog(@"app is inactive");
     void (^safeHandler)() = ^(){
         dispatch_async(dispatch_get_main_queue(), ^{
             completionHandler();
@@ -198,6 +200,8 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
     pushHandler.isInline = NO;
     pushHandler.handlerObj = params;
     [pushHandler notificationReceived];
+
+    completionHandler(UIBackgroundFetchResultNewData);
   }
 }
 
