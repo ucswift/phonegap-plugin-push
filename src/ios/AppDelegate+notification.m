@@ -169,21 +169,35 @@ static char launchNotificationKey;
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
 - (void)application:(UIApplication *) application handleActionWithIdentifier: (NSString *) identifier
-forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^)()) completionHandler {
+forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^)(UIBackgroundFetchResult result)) completionHandler {
 
     NSLog(@"Push Plugin handleActionWithIdentifier %@", identifier);
     NSMutableDictionary *userInfo = [notification mutableCopy];
 
     [userInfo setObject:identifier forKey:@"callback"];
 
+  if (application.applicationState == UIApplicationStateActive) {
     PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
     pushHandler.notificationMessage = userInfo;
     pushHandler.isInline = NO;
     [pushHandler notificationReceived];
 
-
     // Must be called when finished
     completionHandler();
+  } else {
+    void (^safeHandler)() = ^(UIBackgroundFetchResult result){
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completionHandler(result);
+        });
+    };
+
+    NSMutableDictionary* params = [NSMutableDictionary dictionaryWithCapacity:2];
+    [params setObject:safeHandler forKey:@"handler"];
+    PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];    
+    pushHandler.notificationMessage = userInfo;    
+    pushHandler.handlerObj = params;
+    [pushHandler notificationReceived];
+  }
 }
 
 // this method is invoked when:
