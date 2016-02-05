@@ -189,7 +189,7 @@ static char launchNotificationKey;
 //    }
 //}
 
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
+
 - (void)application:(UIApplication *) application handleActionWithIdentifier: (NSString *) identifier
 forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^)()) completionHandler {
 
@@ -202,13 +202,7 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
   //  NSLog(@"app is active");
     PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
     pushHandler.notificationMessage = userInfo;
-    
-    if (application.applicationState == UIApplicationStateActive) {
-        pushHandler.isInline = YES;
-    } else {
-        pushHandler.isInline = NO;
-    }
-    
+    pushHandler.isInline = NO;
     [pushHandler notificationReceived];
 
     // Must be called when finished
@@ -231,9 +225,11 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
   //}
 }
 
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
 // this method is invoked when:
 // - one of the buttons of an interactive notification is tapped
 // see https://developer.apple.com/library/mac/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/IPhoneOSClientImp.html#//apple_ref/doc/uid/TP40008194-CH103-SW1
+// THIS SEEMS TO BE iOS9 ONLY
 - (void)application:(UIApplication *) application handleActionWithIdentifier: (NSString *) identifier forRemoteNotification: (NSDictionary *) notification withResponseInfo:(NSDictionary *)responseInfo completionHandler: (void (^)()) completionHandler {
 
   NSLog(@"Push Plugin handleActionWithIdentifier %@ and responseInfo", identifier);
