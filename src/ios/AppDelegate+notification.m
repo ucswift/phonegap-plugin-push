@@ -196,16 +196,10 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
     NSMutableDictionary *userInfo = [notification mutableCopy];
     [userInfo setObject:identifier forKey:@"callback"];
 
-  //if (application.applicationState == UIApplicationStateActive) {
-  //  NSLog(@"app is active");
     PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
     pushHandler.notificationMessage = userInfo;
     pushHandler.isInline = NO;
-    //[pushHandler notificationReceived];
 
-    
-  //} else {
-  //  NSLog(@"app is inactive");
     void (^safeHandler)() = ^(){
         dispatch_async(dispatch_get_main_queue(), ^{
             completionHandler();
@@ -214,17 +208,8 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
 
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithCapacity:2];
     [params setObject:safeHandler forKey:@"handler"];
-  //  PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];    
-  //  pushHandler.notificationMessage = userInfo;
-  //  pushHandler.isInline = NO;
     pushHandler.handlerObj = params;
     [pushHandler notificationReceived];
-  //}
-
-    // Must be called when finished
-    //if (completionHandler) {
-    //    completionHandler();
-    //}
 }
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
@@ -245,20 +230,24 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
   }
 
   if (application.applicationState == UIApplicationStateActive) {
+    NSLog(@"app is active");
     PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];
     pushHandler.notificationMessage = userInfo;
     pushHandler.isInline = YES;
     [pushHandler notificationReceived];
   } else {
-    void (^safeHandler)() = ^(void){
+    NSLog(@"app is inactive");
+    void (^safeHandler)() = ^(){
         dispatch_async(dispatch_get_main_queue(), ^{
             completionHandler();
         });
     };
+    
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithCapacity:2];
     [params setObject:safeHandler forKey:@"handler"];
     PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];    
-    pushHandler.notificationMessage = userInfo;    
+    pushHandler.notificationMessage = userInfo;
+    pushHandler.isInline = NO;
     pushHandler.handlerObj = params;
     [pushHandler notificationReceived];
   }
