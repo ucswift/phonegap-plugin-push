@@ -172,15 +172,15 @@ static char launchNotificationKey;
 forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^)()) completionHandler {
 
     NSLog(@"Push Plugin handleActionWithIdentifier %@", identifier);
-    NSMutableDictionary *userInfo = [notification mutableCopy];
 
+    NSMutableDictionary *userInfo = [notification mutableCopy];
     [userInfo setObject:identifier forKey:@"callback"];
 
   if (application.applicationState == UIApplicationStateActive) {
     NSLog(@"app is active");
     PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
     pushHandler.notificationMessage = userInfo;
-    pushHandler.isInline = NO;
+    pushHandler.isInline = YES;
     [pushHandler notificationReceived];
 
     // Must be called when finished
@@ -189,7 +189,7 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
     NSLog(@"app is inactive");
     void (^safeHandler)() = ^(){
         dispatch_async(dispatch_get_main_queue(), ^{
-            completionHandler();
+            completionHandler(UIBackgroundFetchResultNewData);
         });
     };
 
@@ -197,11 +197,11 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
     [params setObject:safeHandler forKey:@"handler"];
     PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];    
     pushHandler.notificationMessage = userInfo;
-    pushHandler.isInline = NO;
+    //pushHandler.isInline = NO;
     pushHandler.handlerObj = params;
     [pushHandler notificationReceived];
 
-    completionHandler(UIBackgroundFetchResultNewData);
+    //completionHandler(UIBackgroundFetchResultNewData);
   }
 }
 
