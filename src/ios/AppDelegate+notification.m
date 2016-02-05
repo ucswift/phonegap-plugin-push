@@ -198,31 +198,37 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
     NSMutableDictionary *userInfo = [notification mutableCopy];
     [userInfo setObject:identifier forKey:@"callback"];
 
-  if (application.applicationState == UIApplicationStateActive) {
-    NSLog(@"app is active");
+  //if (application.applicationState == UIApplicationStateActive) {
+  //  NSLog(@"app is active");
     PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
     pushHandler.notificationMessage = userInfo;
-    pushHandler.isInline = YES;
+    
+    if (application.applicationState == UIApplicationStateActive) {
+        pushHandler.isInline = YES;
+    } else {
+        pushHandler.isInline = NO;
+    }
+    
     [pushHandler notificationReceived];
 
     // Must be called when finished
     completionHandler();
-  } else {
-    NSLog(@"app is inactive");
-    void (^safeHandler)() = ^(){
-        dispatch_async(dispatch_get_main_queue(), ^{
-            completionHandler();
-        });
-    };
+  //} else {
+  //  NSLog(@"app is inactive");
+  //  void (^safeHandler)() = ^(){
+  //      dispatch_async(dispatch_get_main_queue(), ^{
+  //          completionHandler();
+  //      });
+  //  };
 
-    NSMutableDictionary* params = [NSMutableDictionary dictionaryWithCapacity:2];
-    [params setObject:safeHandler forKey:@"handler"];
-    PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];    
-    pushHandler.notificationMessage = userInfo;
-    pushHandler.isInline = NO;
-    pushHandler.handlerObj = params;
-    [pushHandler notificationReceived];
-  }
+  //  NSMutableDictionary* params = [NSMutableDictionary dictionaryWithCapacity:2];
+  //  [params setObject:safeHandler forKey:@"handler"];
+  //  PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];    
+  //  pushHandler.notificationMessage = userInfo;
+  //  pushHandler.isInline = NO;
+  //  pushHandler.handlerObj = params;
+  //  [pushHandler notificationReceived];
+  //}
 }
 
 // this method is invoked when:
