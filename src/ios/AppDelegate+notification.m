@@ -35,6 +35,11 @@ static char launchNotificationKey;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(createNotificationChecker:)
                                                  name:@"UIApplicationDidFinishLaunchingNotification" object:nil];
 
+    [[NSNotificationCenter defaultCenter]addObserver:self
+                                          selector:@selector(onApplicationDidBecomeActive:)
+                                              name:UIApplicationDidBecomeActiveNotification
+                                            object:nil];
+
     // This actually calls the original init method over in AppDelegate. Equivilent to calling super
     // on an overrided method, this is not recursive, although it appears that way. neat huh?
     return [self swizzled_init];
@@ -52,6 +57,23 @@ static char launchNotificationKey;
         if (launchOptions)
             self.launchNotification = [launchOptions objectForKey: @"UIApplicationLaunchOptionsRemoteNotificationKey"];
     }
+}
+
+- (void)onApplicationDidBecomeActive:(NSNotification *)notification
+{
+  NSLog(@"onApplicationDidBecomeActive");
+  
+  UIApplication *application = notification.object;
+
+  application.applicationIconBadgeNumber = 0;
+  
+  if (self.launchNotification) {
+    PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];
+    
+    pushHandler.notificationMessage = self.launchNotification;
+    self.launchNotification = nil;
+    [pushHandler performSelectorOnMainThread:@selector(notificationReceived) withObject:pushHandler waitUntilDone:NO];
+  }
 }
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
@@ -146,26 +168,26 @@ static char launchNotificationKey;
     }
 }
 
-- (void)applicationDidBecomeActive:(UIApplication *)application {
-
-    NSLog(@"applicationDidBecomeActive");
-
-    PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
-    if (pushHandler.clearBadge) {
-        NSLog(@"PushPlugin clearing badge");
-        //zero badge
-        application.applicationIconBadgeNumber = 0;
-    } else {
-        NSLog(@"PushPlugin skip clear badge");
-    }
-
-    if (self.launchNotification) {
-        pushHandler.isInline = NO;
-        pushHandler.notificationMessage = self.launchNotification;
-        self.launchNotification = nil;
-        [pushHandler performSelectorOnMainThread:@selector(notificationReceived) withObject:pushHandler waitUntilDone:NO];
-    }
-}
+//- (void)applicationDidBecomeActive:(UIApplication *)application {
+//
+//    NSLog(@"applicationDidBecomeActive");
+//
+//    PushPlugin *pushHandler = [self getCommandInstance:@"PushNotification"];
+//    if (pushHandler.clearBadge) {
+//        NSLog(@"PushPlugin clearing badge");
+//        //zero badge
+//        application.applicationIconBadgeNumber = 0;
+//    } else {
+//       NSLog(@"PushPlugin skip clear badge");
+//    }
+//
+//    if (self.launchNotification) {
+//        pushHandler.isInline = NO;
+//        pushHandler.notificationMessage = self.launchNotification;
+//        self.launchNotification = nil;
+//        [pushHandler performSelectorOnMainThread:@selector(notificationReceived) withObject:pushHandler waitUntilDone:NO];
+//    }
+//}
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
 - (void)application:(UIApplication *) application handleActionWithIdentifier: (NSString *) identifier
@@ -189,7 +211,7 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
     NSLog(@"app is inactive");
     void (^safeHandler)() = ^(){
         dispatch_async(dispatch_get_main_queue(), ^{
-            completionHandler(UIBackgroundFetchResultNewData);
+            completionHandler();
         });
     };
 
@@ -197,11 +219,9 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
     [params setObject:safeHandler forKey:@"handler"];
     PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];    
     pushHandler.notificationMessage = userInfo;
-    //pushHandler.isInline = NO;
+    pushHandler.isInline = NO;
     pushHandler.handlerObj = params;
     [pushHandler notificationReceived];
-
-    //completionHandler(UIBackgroundFetchResultNewData);
   }
 }
 
