@@ -201,29 +201,6 @@ forRemoteNotification: (NSDictionary *) notification completionHandler: (void (^
   }
 }
 
-// Slient notification
-- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)notification fetchCompletionHandler:(void(^)(UIBackgroundFetchResult result))completionHandler
-{
-    NSLog(@"didReceiveRemoteNotification with fetchCompletionHandler");  
-
-    void (^safeHandler)(UIBackgroundFetchResult) = ^(UIBackgroundFetchResult result){
-        dispatch_async(dispatch_get_main_queue(), ^{
-            completionHandler(result);
-        });
-    };
-
-    NSMutableDictionary *userInfo = [notification mutableCopy];
-
-    NSMutableDictionary* params = [NSMutableDictionary dictionaryWithCapacity:2];
-    [params setObject:safeHandler forKey:@"handler"];
-
-    PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];    
-    pushHandler.notificationMessage = userInfo;
-    pushHandler.isInline = NO;
-    pushHandler.handlerObj= params;  
-    [pushHandler notificationReceived];
-}
-
 // this method is invoked when:
 // - one of the buttons of an interactive notification is tapped
 // see https://developer.apple.com/library/mac/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/IPhoneOSClientImp.html#//apple_ref/doc/uid/TP40008194-CH103-SW1
